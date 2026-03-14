@@ -1,0 +1,991 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Translate+ — Ancient Language Translator</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;700&family=IM+Fell+English:ital@0;1&family=Inter:wght@300;400;500&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg:#0e0c0a;--bg2:#161310;--bg3:#1e1a15;--bg4:#252018;
+      --border:rgba(180,150,80,0.15);--border2:rgba(180,150,80,0.3);
+      --gold:#c8a84b;--gold2:#e2c97e;--gold3:#f0dda0;
+      --text:#f0e8d5;--text2:#b8a880;--text3:#7a6e55;
+      --sopt:#1e1a15;--glow:rgba(200,168,75,0.3);
+    }
+    [data-theme="light"] {
+      --bg:#f5f0e8;--bg2:#fdfaf4;--bg3:#ede8dc;--bg4:#e4ddd0;
+      --border:rgba(140,100,40,0.15);--border2:rgba(140,100,40,0.3);
+      --gold:#8b6914;--gold2:#6b4f0e;--gold3:#3a2808;
+      --text:#2a1f0e;--text2:#6b5630;--text3:#9c8562;
+      --sopt:#ede8dc;--glow:rgba(140,100,40,0.15);
+    }
+
+    body { background:var(--bg);color:var(--text);font-family:'Inter',sans-serif;min-height:100vh;overflow-x:hidden;transition:background .3s,color .3s; }
+    body::before { content:'';position:fixed;inset:0;pointer-events:none;z-index:0;background-image:radial-gradient(ellipse 80% 50% at 50% -10%,var(--glow) 0%,transparent 60%); }
+    .container { position:relative;z-index:1;max-width:900px;margin:0 auto;padding:2rem 1.5rem 5rem; }
+
+    /* top bar */
+    .top-bar { display:flex;justify-content:flex-end;margin-bottom:1.5rem; }
+    .theme-toggle { display:flex;align-items:center;gap:8px;padding:7px 14px;border-radius:20px;border:1px solid var(--border2);background:var(--bg3);color:var(--text2);font-size:12px;font-family:'Inter',sans-serif;cursor:pointer;transition:all .2s; }
+    .theme-toggle:hover { border-color:var(--gold);color:var(--gold2); }
+
+    /* header */
+    header { text-align:center;margin-bottom:2rem; }
+    .logo { display:flex;align-items:center;justify-content:center;margin-bottom:.5rem; }
+    .logo h1 { font-family:'Cinzel',serif;font-size:clamp(2rem,6vw,3.2rem);font-weight:700;letter-spacing:6px;color:var(--gold3);text-shadow:0 0 40px var(--glow); }
+    .logo .plus { font-family:'Cinzel',serif;font-size:clamp(1.4rem,4vw,2.2rem);color:var(--gold); }
+    .tagline { font-family:'IM Fell English',serif;font-style:italic;font-size:15px;color:var(--text3);letter-spacing:1.5px; }
+    .ornament { display:flex;align-items:center;gap:16px;margin-top:1.2rem; }
+    .ornament-line { flex:1;height:1px;background:linear-gradient(to right,transparent,var(--border2),transparent); }
+    .ornament-symbol { color:var(--gold);font-size:18px; }
+
+    /* lang row */
+    .lang-row { display:grid;grid-template-columns:1fr 48px 1fr;gap:10px;align-items:center;margin-bottom:1rem; }
+    .lang-row label { display:block;font-size:10px;letter-spacing:2px;text-transform:uppercase;color:var(--text3);font-weight:500;margin-bottom:6px; }
+    select { width:100%;padding:11px 36px 11px 14px;background:var(--bg3);border:1px solid var(--border);border-radius:8px;color:var(--text);font-size:13.5px;font-family:'IM Fell English',serif;font-style:italic;cursor:pointer;appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%23c8a84b' stroke-width='1.5' fill='none' stroke-linecap='round'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 12px center;background-color:var(--bg3);transition:border-color .2s; }
+    select:hover,select:focus { border-color:var(--gold);outline:none; }
+    select option { background:var(--sopt);font-style:normal; }
+    .swap-wrap { display:flex;flex-direction:column;align-items:center;padding-top:22px; }
+    .swap-btn { width:42px;height:42px;border-radius:50%;border:1px solid var(--border2);background:var(--bg3);color:var(--gold);font-size:18px;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all .2s; }
+    .swap-btn:hover { border-color:var(--gold);background:rgba(200,168,75,0.1);transform:rotate(180deg); }
+
+    /* script keyboard */
+    .kbd-toggle-row { display:flex;gap:8px;margin-bottom:.8rem; }
+    .kbd-toggle { display:flex;align-items:center;gap:6px;padding:6px 14px;border-radius:8px;border:1px solid var(--border);background:var(--bg3);color:var(--text3);font-size:12px;font-family:'Inter',sans-serif;cursor:pointer;transition:all .2s; }
+    .kbd-toggle:hover,.kbd-toggle.active { border-color:var(--gold);color:var(--gold2); }
+    .kbd-panel { display:none;border:1px solid var(--border);border-radius:10px;background:var(--bg2);padding:12px;margin-bottom:1rem; }
+    .kbd-panel.open { display:block; }
+    .kbd-label { font-size:10px;letter-spacing:2px;text-transform:uppercase;color:var(--text3);margin-bottom:8px;font-weight:500; }
+    .kbd-section { margin-bottom:10px; }
+    .kbd-section-title { font-size:10px;color:var(--text3);margin-bottom:6px;letter-spacing:1px;text-transform:uppercase; }
+    .kbd-row { display:flex;flex-wrap:wrap;gap:5px;margin-bottom:4px; }
+    .kbd-key { padding:5px 9px;border:1px solid var(--border2);border-radius:5px;background:var(--bg3);color:var(--gold2);font-size:15px;cursor:pointer;transition:all .15s;min-width:34px;text-align:center;line-height:1.3; }
+    .kbd-key:hover { background:rgba(200,168,75,0.12);border-color:var(--gold); }
+    .kbd-key:active { transform:scale(0.93); }
+    .kbd-target-select { padding:5px 10px;background:var(--bg3);border:1px solid var(--border);border-radius:6px;color:var(--text2);font-size:12px;font-family:'Inter',sans-serif;cursor:pointer;appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6' viewBox='0 0 10 6'%3E%3Cpath d='M1 1l4 4 4-4' stroke='%23c8a84b' stroke-width='1.2' fill='none'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 8px center;padding-right:24px;margin-bottom:10px; }
+
+    /* panels */
+    .panels { display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:1.2rem; }
+    @media(max-width:580px){ .panels{grid-template-columns:1fr} .lang-row{grid-template-columns:1fr 40px 1fr} }
+    .panel { border:1px solid var(--border);border-radius:12px;overflow:hidden;background:var(--bg2);display:flex;flex-direction:column;transition:border-color .2s; }
+    .panel:focus-within { border-color:rgba(200,168,75,0.35); }
+    .panel-header { padding:10px 16px 9px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between; }
+    .panel-header-label { font-size:10px;letter-spacing:2px;text-transform:uppercase;color:var(--text3);font-weight:500; }
+    .char-count { font-size:11px;color:var(--text3); }
+    textarea { flex:1;min-height:180px;padding:16px;background:transparent;border:none;color:var(--text);font-size:15px;font-family:'IM Fell English',serif;line-height:1.75;resize:none;outline:none; }
+    textarea::placeholder { color:var(--text3);font-style:italic; }
+    .output-panel { border:1px solid var(--border);border-radius:12px;overflow:hidden;background:var(--bg3);display:flex;flex-direction:column; }
+    .output-content { flex:1;min-height:180px;padding:16px;font-size:15px;font-family:'IM Fell English',serif;line-height:1.75;color:var(--text);white-space:pre-wrap;word-break:break-word; }
+    .output-content.placeholder { color:var(--text3);font-style:italic; }
+    .output-content.loading { animation:pulse 1.5s ease-in-out infinite; }
+    @keyframes pulse { 0%,100%{opacity:1}50%{opacity:.4} }
+    .output-actions { display:none;align-items:center;gap:8px;padding:0 16px 10px;flex-wrap:wrap; }
+    .output-actions.show { display:flex; }
+    .action-btn { display:flex;align-items:center;gap:5px;padding:5px 12px;border:1px solid var(--border);border-radius:6px;background:transparent;color:var(--text3);font-size:12px;cursor:pointer;transition:all .2s;font-family:'Inter',sans-serif; }
+    .action-btn:hover { border-color:var(--gold);color:var(--gold2); }
+    .action-btn.speaking { border-color:var(--gold);color:var(--gold); }
+    .pronun-bar { display:none;border:1px solid var(--border);border-radius:12px;background:var(--bg2);overflow:hidden;margin-bottom:1.2rem; }
+    .pronun-bar.visible { display:block; }
+    .pronun-bar-header { padding:9px 16px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between; }
+    .pronun-bar-label { font-size:10px;letter-spacing:2px;text-transform:uppercase;color:var(--gold);font-weight:500; }
+    .pronun-bar-body { padding:14px 16px;display:flex;align-items:flex-start;gap:14px;flex-wrap:wrap; }
+    .pronun-ipa-text { flex:1;min-width:200px; }
+    .pronun-full { font-size:18px;color:var(--gold2);letter-spacing:2px;font-family:'IM Fell English',serif;line-height:1.5;margin-bottom:6px; }
+    .pronun-note { font-size:12px;color:var(--text3);font-style:italic;font-family:'IM Fell English',serif;line-height:1.6; }
+    .pronun-words { display:flex;flex-wrap:wrap;gap:6px;margin-top:10px; }
+    .pronun-word-pill { background:var(--bg3);border:1px solid var(--border);border-radius:8px;padding:6px 10px;text-align:center; }
+    .pronun-word-orig { font-size:13px;color:var(--gold2);font-family:'IM Fell English',serif; }
+    .pronun-word-ipa { font-size:11px;color:var(--text3);margin-top:2px; }
+    .pronun-listen-btn { flex-shrink:0;display:flex;align-items:center;gap:6px;padding:8px 16px;border:1px solid var(--gold);border-radius:8px;background:rgba(200,168,75,.08);color:var(--gold2);font-size:12px;font-family:'Cinzel',serif;letter-spacing:1px;cursor:pointer;transition:all .2s;align-self:flex-start; }
+    .pronun-listen-btn:hover { background:rgba(200,168,75,.16); }
+    .pronun-listen-btn.speaking { background:rgba(200,168,75,.18);border-color:var(--gold2); }
+
+    /* translate btn */
+    .translate-btn { width:100%;padding:15px;border-radius:10px;border:1px solid var(--gold);background:linear-gradient(135deg,rgba(200,168,75,.12),rgba(160,82,45,.08));color:var(--gold2);font-size:14px;font-family:'Cinzel',serif;font-weight:600;letter-spacing:3px;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all .25s;margin-bottom:1.5rem;position:relative;overflow:hidden; }
+    .translate-btn::before { content:'';position:absolute;inset:0;background:linear-gradient(135deg,rgba(200,168,75,.2),rgba(160,82,45,.15));opacity:0;transition:opacity .25s; }
+    .translate-btn:hover::before { opacity:1; }
+    .translate-btn:hover { box-shadow:0 0 20px var(--glow); }
+    .translate-btn:active { transform:scale(.99); }
+    .translate-btn:disabled { opacity:.5;cursor:not-allowed; }
+
+    /* result tabs */
+    .result-tabs { display:none;border:1px solid var(--border);border-radius:12px;overflow:hidden;margin-bottom:1rem; }
+    .result-tabs.visible { display:block; }
+    .tab-bar { display:flex;border-bottom:1px solid var(--border);background:var(--bg2); }
+    .tab-btn { flex:1;padding:10px;font-size:11px;letter-spacing:1.5px;text-transform:uppercase;color:var(--text3);background:transparent;border:none;cursor:pointer;font-family:'Inter',sans-serif;font-weight:500;transition:all .2s;border-bottom:2px solid transparent;margin-bottom:-1px; }
+    .tab-btn.active { color:var(--gold);border-bottom-color:var(--gold); }
+    .tab-btn:hover:not(.active) { color:var(--text2); }
+    .tab-panel { display:none;padding:16px; }
+    .tab-panel.active { display:block; }
+
+    /* breakdown */
+    .breakdown-grid { display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:1px;background:var(--border);border-radius:0 0 8px 8px;overflow:hidden; }
+    .breakdown-word { background:var(--bg2);padding:11px 13px;display:flex;flex-direction:column;gap:3px; }
+    .bw-original { font-family:'IM Fell English',serif;font-size:16px;color:var(--gold2); }
+    .bw-roman { font-size:11px;color:var(--text3);font-style:italic; }
+    .bw-meaning { font-size:12px;color:var(--text2);margin-top:2px; }
+
+    /* IPA */
+    .ipa-block { font-family:'IM Fell English',serif; }
+    .ipa-main { font-size:22px;color:var(--gold2);letter-spacing:2px;margin-bottom:10px;line-height:1.5; }
+    .ipa-note { font-size:13px;color:var(--text2);font-style:italic;line-height:1.7; }
+    .ipa-words { display:flex;flex-wrap:wrap;gap:8px;margin-top:12px; }
+    .ipa-word { background:var(--bg3);border:1px solid var(--border);border-radius:8px;padding:8px 12px; }
+    .ipa-w-orig { font-size:13px;color:var(--gold2);font-family:'IM Fell English',serif; }
+    .ipa-w-ipa { font-size:12px;color:var(--text3);margin-top:2px; }
+
+    /* scribal notes */
+    .notes-text { font-size:14px;font-family:'IM Fell English',serif;font-style:italic;color:var(--text2);line-height:1.8; }
+
+    /* dictionary */
+    .dict-section { margin-top:1.5rem;border:1px solid var(--border);border-radius:12px;overflow:hidden; }
+    .dict-header { padding:12px 16px;border-bottom:1px solid var(--border);background:var(--bg2);display:flex;align-items:center;justify-content:space-between; }
+    .dict-header-label { font-size:10px;letter-spacing:2px;text-transform:uppercase;color:var(--gold);font-weight:500; }
+    .dict-body { padding:16px;background:var(--bg3); }
+    .dict-input-row { display:flex;gap:8px;margin-bottom:12px; }
+    .dict-input { flex:1;padding:10px 14px;background:var(--bg2);border:1px solid var(--border);border-radius:8px;color:var(--text);font-size:14px;font-family:'IM Fell English',serif;font-style:italic;outline:none;transition:border-color .2s; }
+    .dict-input:focus { border-color:var(--gold); }
+    .dict-input::placeholder { color:var(--text3);font-style:italic; }
+    .dict-lang-sel { padding:10px 30px 10px 12px;background:var(--bg2);border:1px solid var(--border);border-radius:8px;color:var(--text);font-size:13px;font-family:'IM Fell English',serif;font-style:italic;cursor:pointer;appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6' viewBox='0 0 10 6'%3E%3Cpath d='M1 1l4 4 4-4' stroke='%23c8a84b' stroke-width='1.2' fill='none'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 8px center;background-color:var(--bg2);outline:none;transition:border-color .2s; }
+    .dict-lang-sel:focus { border-color:var(--gold); }
+    .dict-lookup-btn { padding:10px 18px;border-radius:8px;border:1px solid var(--gold);background:rgba(200,168,75,.08);color:var(--gold2);font-size:12px;font-family:'Cinzel',serif;letter-spacing:1.5px;cursor:pointer;transition:all .2s;white-space:nowrap; }
+    .dict-lookup-btn:hover { background:rgba(200,168,75,.15); }
+    .dict-lookup-btn:disabled { opacity:.5;cursor:not-allowed; }
+    .dict-result { display:none; }
+    .dict-result.visible { display:block; }
+    .dict-word-title { font-family:'Cinzel',serif;font-size:20px;color:var(--gold2);margin-bottom:4px; }
+    .dict-ipa { font-size:13px;color:var(--text3);margin-bottom:12px;font-style:italic; }
+    .dict-divider { height:1px;background:var(--border);margin:12px 0; }
+    .dict-pos { display:inline-block;padding:2px 9px;border-radius:12px;border:1px solid var(--border2);font-size:11px;color:var(--gold);margin-bottom:8px; }
+    .dict-definition { font-size:14px;color:var(--text);font-family:'IM Fell English',serif;line-height:1.75;margin-bottom:8px; }
+    .dict-etymology { font-size:13px;color:var(--text2);font-family:'IM Fell English',serif;font-style:italic;line-height:1.7;padding:10px 14px;background:rgba(200,168,75,.04);border-left:3px solid var(--gold);border-radius:0 6px 6px 0;margin-bottom:10px; }
+    .dict-examples { list-style:none; }
+    .dict-examples li { font-size:13px;color:var(--text2);font-family:'IM Fell English',serif;font-style:italic;padding:6px 0;border-bottom:1px solid var(--border);line-height:1.6; }
+    .dict-examples li:last-child { border-bottom:none; }
+    .dict-examples li::before { content:'›  ';color:var(--gold);font-style:normal; }
+    .dict-loading { font-size:13px;color:var(--text3);font-style:italic;font-family:'IM Fell English',serif;animation:pulse 1.5s infinite; }
+
+    /* error */
+    .error { display:none;text-align:center;color:#e07070;font-size:13px;padding:10px;font-family:'Inter',sans-serif; }
+
+    /* footer */
+    .langs-footer { margin-top:2.5rem;text-align:center; }
+    .langs-footer p { font-size:11px;color:var(--text3);letter-spacing:.8px;line-height:2.2; }
+    .langs-footer span { color:var(--text2); }
+
+    /* ── WORLD MAP ── */
+    .map-section { border:1px solid var(--border);border-radius:12px;overflow:hidden;margin-bottom:1rem;background:var(--bg2); }
+    .map-header { padding:9px 16px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between; }
+    .map-header-label { font-size:10px;letter-spacing:2px;text-transform:uppercase;color:var(--gold);font-weight:500; }
+    .map-origin-label { font-size:12px;color:var(--text2);font-family:'IM Fell English',serif;font-style:italic; }
+    .map-wrap { padding:0;line-height:0;position:relative; }
+    #worldMapSvg { width:100%;height:auto;display:block; }
+    #worldMapSvg .country { fill:var(--bg3);stroke:var(--border2);stroke-width:0.4;transition:fill .4s; }
+    #worldMapSvg .country.highlighted { fill:var(--gold);stroke:var(--gold2);stroke-width:0.8; }
+    #worldMapSvg .country.highlighted-secondary { fill:rgba(200,168,75,0.35);stroke:var(--gold);stroke-width:0.5; }
+    .map-legend { padding:8px 16px 10px;border-top:1px solid var(--border);display:flex;align-items:center;gap:16px;flex-wrap:wrap; }
+    .map-legend-item { display:flex;align-items:center;gap:6px;font-size:11px;color:var(--text3); }
+    .map-legend-dot { width:10px;height:10px;border-radius:50%; }
+    .map-legend-dot.primary { background:var(--gold); }
+    .map-legend-dot.secondary { background:rgba(200,168,75,0.35);border:1px solid var(--gold); }
+
+    .verse-display { margin-top:2.5rem;text-align:center;padding:1.5rem;border:1px solid var(--border);border-radius:12px;background:rgba(200,168,75,.03); }
+    .verse-ornament { font-size:16px;color:var(--gold);margin-bottom:10px;letter-spacing:8px; }
+    .verse-text { font-family:'IM Fell English',serif;font-style:italic;font-size:15px;color:var(--text2);line-height:1.9;max-width:600px;margin:0 auto 10px; }
+    .verse-ref { font-family:'Cinzel',serif;font-size:11px;color:var(--gold);letter-spacing:2px; }
+
+    .lang-search-row { display:grid;grid-template-columns:1fr 48px 1fr;gap:10px;margin-bottom:6px; }
+    .lang-search-wrap { position:relative; }
+    .lang-search-spacer { width:48px; }
+    .lang-search-input { width:100%;padding:8px 32px 8px 12px;background:var(--bg3);border:1px solid var(--border);border-radius:8px;color:var(--text);font-size:13px;font-family:'Inter',sans-serif;outline:none;transition:border-color .2s; }
+    .lang-search-input:focus { border-color:var(--gold); }
+    .lang-search-input::placeholder { color:var(--text3); }
+    .lang-search-input-icon { position:absolute;right:10px;top:50%;transform:translateY(-50%);font-size:12px;color:var(--text3);pointer-events:none; }
+
+  </style>
+</head>
+<body>
+<div class="container">
+
+  <div class="top-bar">
+    <button class="theme-toggle" onclick="toggleTheme()">
+      <span id="themeIcon">☀️</span><span id="themeLabel">Light mode</span>
+    </button>
+  </div>
+
+  <header>
+    <div class="logo"><h1>TRANSLATE<span class="plus">+</span></h1></div>
+    <p class="tagline">Ancient &amp; Classical Language Translator</p>
+    <div class="ornament"><div class="ornament-line"></div><div class="ornament-symbol">✦</div><div class="ornament-line"></div></div>
+  </header>
+
+  <div class="lang-search-row">
+    <div class="lang-search-wrap">
+      <input class="lang-search-input" id="srcSearch" type="text" placeholder="Search languages..." oninput="filterLang('srcLang',this.value)" autocomplete="off"/>
+    </div>
+    <div class="lang-search-spacer"></div>
+    <div class="lang-search-wrap">
+      <input class="lang-search-input" id="tgtSearch" type="text" placeholder="Search languages..." oninput="filterLang('tgtLang',this.value)" autocomplete="off"/>
+    </div>
+  </div>
+  <div class="lang-row">
+    <div>
+      <label>From</label>
+      <select id="srcLang" onchange="updateKeyboard();updateMap()">
+        <option>English</option>
+        <option>Latin</option>
+        <option>Ancient Greek</option>
+        <option>Assyrian (Akkadian) — General</option>
+        <option>Old Assyrian (2000–1500 BCE)</option>
+        <option>Middle Assyrian (1500–1000 BCE)</option>
+        <option>Neo-Assyrian (1000–600 BCE)</option>
+        <option>Old Babylonian Akkadian</option>
+        <option>Neo-Babylonian Akkadian</option>
+        <option>Sumerian</option>
+        <option>Old Egyptian</option>
+        <option>Sanskrit</option>
+        <option>Old Norse</option>
+        <option>Aramaic</option>
+        <option>Suret (Assyrian Neo-Aramaic)</option>
+        <option>Ancient Hebrew</option>
+        <option>Old Persian</option>
+        <option>Coptic</option>
+        <option>Phoenician</option>
+        <option>Tamazight (Central Atlas Berber)</option>
+        <option>Tachelhit (Shilha) — SW Morocco</option>
+        <option>Tarifit (Rif Berber) — N Morocco</option>
+        <option>Kabyle — Algeria</option>
+        <option>Tachawit (Chaouia) — Algeria</option>
+        <option>Tumzabt (Mozabite) — Algeria</option>
+        <option>Tamahaq (Tuareg) — Sahara</option>
+        <option>Tamasheq (Tuareg) — Mali/Niger</option>
+        <option>Tamajaq (Tuareg) — Niger</option>
+        <option>Nafusi — Libya</option>
+        <option>Siwi — Egypt</option>
+        <option>Ghadamès — Libya</option>
+        <option>Zenaga — Mauritania</option>
+        <option>Old English (Anglo-Saxon)</option>
+        <option>Classical Arabic</option>
+        <option>Hittite</option>
+        <option>Elamite</option>
+        <option>Ugaritic</option>
+        <option>Mycenaean Greek (Linear B)</option>
+        <option>Lydian</option>
+        <option>Etruscan</option>
+        <option>Tocharian A</option>
+        <option>Tocharian B</option>
+        <option>Sogdian</option>
+        <option>Old Turkic</option>
+        <option>Bactrian</option>
+        <option>Avestan</option>
+        <option>Middle Persian (Pahlavi)</option>
+        <option>Ge'ez (Classical Ethiopic)</option>
+        <option>Proto-Sinaitic</option>
+      </select>
+    </div>
+    <div class="swap-wrap">
+      <button class="swap-btn" onclick="swapLangs()" title="Swap">⇄</button>
+    </div>
+    <div>
+      <label>To</label>
+      <select id="tgtLang" onchange="updateMap()">
+        <option>Latin</option>
+        <option>English</option>
+        <option>Ancient Greek</option>
+        <option>Assyrian (Akkadian) — General</option>
+        <option>Old Assyrian (2000–1500 BCE)</option>
+        <option>Middle Assyrian (1500–1000 BCE)</option>
+        <option>Neo-Assyrian (1000–600 BCE)</option>
+        <option>Old Babylonian Akkadian</option>
+        <option>Neo-Babylonian Akkadian</option>
+        <option>Sumerian</option>
+        <option>Old Egyptian</option>
+        <option>Sanskrit</option>
+        <option>Old Norse</option>
+        <option>Aramaic</option>
+        <option>Suret (Assyrian Neo-Aramaic)</option>
+        <option>Ancient Hebrew</option>
+        <option>Old Persian</option>
+        <option>Coptic</option>
+        <option>Phoenician</option>
+        <option>Tamazight (Central Atlas Berber)</option>
+        <option>Tachelhit (Shilha) — SW Morocco</option>
+        <option>Tarifit (Rif Berber) — N Morocco</option>
+        <option>Kabyle — Algeria</option>
+        <option>Tachawit (Chaouia) — Algeria</option>
+        <option>Tumzabt (Mozabite) — Algeria</option>
+        <option>Tamahaq (Tuareg) — Sahara</option>
+        <option>Tamasheq (Tuareg) — Mali/Niger</option>
+        <option>Tamajaq (Tuareg) — Niger</option>
+        <option>Nafusi — Libya</option>
+        <option>Siwi — Egypt</option>
+        <option>Ghadamès — Libya</option>
+        <option>Zenaga — Mauritania</option>
+        <option>Old English (Anglo-Saxon)</option>
+        <option>Classical Arabic</option>
+        <option>Hittite</option>
+        <option>Elamite</option>
+        <option>Ugaritic</option>
+        <option>Mycenaean Greek (Linear B)</option>
+        <option>Lydian</option>
+        <option>Etruscan</option>
+        <option>Tocharian A</option>
+        <option>Tocharian B</option>
+        <option>Sogdian</option>
+        <option>Old Turkic</option>
+        <option>Bactrian</option>
+        <option>Avestan</option>
+        <option>Middle Persian (Pahlavi)</option>
+        <option>Ge'ez (Classical Ethiopic)</option>
+        <option>Proto-Sinaitic</option>
+      </select>
+    </div>
+  </div>
+
+
+  <!-- World Map -->
+  <div class="map-section" id="mapSection">
+    <div class="map-header">
+      <span class="map-header-label">✦ Language Origin Map</span>
+      <span class="map-origin-label" id="mapOriginLabel">Select a language</span>
+    </div>
+    <div class="map-wrap">
+      <svg id="worldMapSvg" viewBox="0 0 960 500" xmlns="http://www.w3.org/2000/svg"></svg>
+    </div>
+    <div class="map-legend">
+      <div class="map-legend-item"><div class="map-legend-dot primary"></div>Primary region</div>
+      <div class="map-legend-item"><div class="map-legend-dot secondary"></div>Extended/influenced region</div>
+    </div>
+  </div>
+
+  <!-- Script keyboard -->
+  <div class="kbd-toggle-row">
+    <button class="kbd-toggle" id="kbdToggleBtn" onclick="toggleKbd()">⌨ Script Keyboard</button>
+  </div>
+  <div class="kbd-panel" id="kbdPanel">
+    <div class="kbd-label">Script keyboard — click to insert into source text</div>
+    <select class="kbd-target-select" id="kbdScript" onchange="renderKbd()">
+      <option value="greek">Ancient Greek</option>
+      <option value="hebrew">Hebrew</option>
+      <option value="arabic">Arabic</option>
+      <option value="devanagari">Devanagari (Sanskrit)</option>
+      <option value="coptic">Coptic</option>
+      <option value="tifinagh">Tifinagh (Berber)</option>
+      <option value="geez">Ge'ez (Ethiopic)</option>
+      <option value="runic">Elder Futhark (Norse)</option>
+      <option value="armenian">Armenian</option>
+    </select>
+    <div id="kbdKeys"></div>
+  </div>
+
+  <div class="panels">
+    <div class="panel">
+      <div class="panel-header">
+        <span class="panel-header-label">Source text</span>
+        <span class="char-count" id="charCount">0 chars</span>
+      </div>
+      <textarea id="inputText" placeholder="Enter text to translate..." oninput="updateCount()"></textarea>
+    </div>
+    <div class="output-panel">
+      <div class="panel-header">
+        <span class="panel-header-label">Translation</span>
+      </div>
+      <div class="output-content placeholder" id="outputText">Translation will appear here...</div>
+      <div class="output-actions" id="outputActions">
+        <button class="action-btn" id="copyBtn" onclick="copyOutput()">⎘ Copy</button>
+        <button class="action-btn" id="speakBtn" onclick="speakOutput()">▶ Listen</button>
+      </div>
+    </div>
+  </div>
+
+  <button class="translate-btn" id="translateBtn" onclick="doTranslate()">TRANSLATE</button>
+
+  <!-- Pronunciation bar -->
+  <div class="pronun-bar" id="pronunBar">
+    <div class="pronun-bar-header">
+      <span class="pronun-bar-label">✦ Pronunciation</span>
+    </div>
+    <div class="pronun-bar-body">
+      <div class="pronun-ipa-text">
+        <div class="pronun-full" id="pronunFull"></div>
+        <div class="pronun-note" id="pronunNote"></div>
+        <div class="pronun-words" id="pronunWords"></div>
+      </div>
+      <button class="pronun-listen-btn" id="pronunListenBtn" onclick="speakPronun()">▶ Listen</button>
+    </div>
+  </div>
+
+  <!-- Result tabs -->
+  <div class="result-tabs" id="resultTabs">
+    <div class="tab-bar">
+      <button class="tab-btn active" onclick="switchTab('breakdown',this)">Word Breakdown</button>
+      <button class="tab-btn" onclick="switchTab('ipa',this)">IPA Pronunciation</button>
+      <button class="tab-btn" onclick="switchTab('notes',this)">Scribal Notes</button>
+    </div>
+    <div class="tab-panel active" id="tab-breakdown">
+      <div class="breakdown-grid" id="breakdownGrid"></div>
+    </div>
+    <div class="tab-panel" id="tab-ipa">
+      <div class="ipa-block">
+        <div class="ipa-main" id="ipaMain"></div>
+        <div class="ipa-note" id="ipaNote"></div>
+        <div class="ipa-words" id="ipaWords"></div>
+      </div>
+    </div>
+    <div class="tab-panel" id="tab-notes">
+      <div class="notes-text" id="notesText"></div>
+    </div>
+  </div>
+
+  <div class="error" id="errMsg"></div>
+
+  <!-- Dictionary lookup -->
+  <div class="dict-section">
+    <div class="dict-header">
+      <span class="dict-header-label">✦ Dictionary &amp; Glossary Lookup</span>
+    </div>
+    <div class="dict-body">
+      <div class="dict-input-row">
+        <input class="dict-input" id="dictWord" type="text" placeholder="Enter a word to look up..." />
+        <select class="dict-lang-sel" id="dictLang">
+          <option>English</option>
+          <option>Latin</option>
+          <option>Ancient Greek</option>
+          <option>Assyrian (Akkadian) — General</option>
+          <option>Sumerian</option>
+          <option>Old Egyptian</option>
+          <option>Sanskrit</option>
+          <option>Old Norse</option>
+          <option>Aramaic</option>
+          <option>Suret (Assyrian Neo-Aramaic)</option>
+          <option>Ancient Hebrew</option>
+          <option>Old Persian</option>
+          <option>Coptic</option>
+          <option>Tamazight (Central Atlas Berber)</option>
+          <option>Hittite</option>
+          <option>Elamite</option>
+          <option>Avestan</option>
+          <option>Ge'ez (Classical Ethiopic)</option>
+          <option>Classical Arabic</option>
+        </select>
+        <button class="dict-lookup-btn" id="dictBtn" onclick="doLookup()">LOOK UP</button>
+      </div>
+      <div class="dict-loading" id="dictLoading" style="display:none;">Searching the ancient lexicons...</div>
+      <div class="dict-result" id="dictResult">
+        <div class="dict-word-title" id="dictWordTitle"></div>
+        <div class="dict-ipa" id="dictIpa"></div>
+        <div class="dict-divider"></div>
+        <span class="dict-pos" id="dictPos"></span>
+        <div class="dict-definition" id="dictDef"></div>
+        <div class="dict-etymology" id="dictEtym"></div>
+        <ul class="dict-examples" id="dictExamples"></ul>
+      </div>
+    </div>
+  </div>
+
+  <div class="langs-footer">
+    <p>
+      <span>Latin · Ancient Greek · Akkadian · Sumerian · Old Egyptian · Sanskrit</span><br>
+      <span>Old Norse · Aramaic · Suret · Hebrew · Old Persian · Coptic · Phoenician</span><br>
+      <span>Berber (13 dialects) · Hittite · Elamite · Ugaritic · Linear B · Lydian</span><br>
+      <span>Etruscan · Tocharian · Sogdian · Old Turkic · Avestan · Pahlavi · Ge'ez</span>
+    </p>
+  </div>
+
+  <div class="verse-display">
+    <div class="verse-ornament"><span>✦</span></div>
+    <blockquote class="verse-text">"For God so loved the world that he gave his only Son, that whoever believes in him should not perish but have eternal life."</blockquote>
+    <div class="verse-ref">— John 3:16 (RSV)</div>
+  </div>
+
+</div>
+<script>
+const API = 'https://api.anthropic.com/v1/messages';
+let isSpeaking = false;
+
+/* ── THEME ── */
+function toggleTheme() {
+  const h = document.documentElement, dark = h.getAttribute('data-theme')==='dark';
+  h.setAttribute('data-theme', dark?'light':'dark');
+  document.getElementById('themeIcon').textContent = dark?'🌙':'☀️';
+  document.getElementById('themeLabel').textContent = dark?'Dark mode':'Light mode';
+}
+
+/* ── UTILS ── */
+function updateCount() {
+  const n = document.getElementById('inputText').value.length;
+  document.getElementById('charCount').textContent = n+' char'+(n!==1?'s':'');
+}
+function setSelect(id,val) {
+  const s=document.getElementById(id);
+  for(let i=0;i<s.options.length;i++) if(s.options[i].value===val){s.selectedIndex=i;return;}
+}
+function swapLangs() {
+  const s=document.getElementById('srcLang').value, t=document.getElementById('tgtLang').value;
+  setSelect('srcLang',t); setSelect('tgtLang',s);
+  const out=document.getElementById('outputText');
+  if(!out.classList.contains('placeholder')){
+    document.getElementById('inputText').value=out.textContent.trim();
+    updateCount(); resetOutput();
+  }
+}
+function resetOutput() {
+  const out=document.getElementById('outputText');
+  out.textContent='Translation will appear here...'; out.className='output-content placeholder';
+  document.getElementById('outputActions').classList.remove('show');
+  document.getElementById('resultTabs').classList.remove('visible');
+  document.getElementById('errMsg').style.display='none';
+  stopSpeech();
+}
+
+/* ── TABS ── */
+function switchTab(name, btn) {
+  document.querySelectorAll('.tab-btn').forEach(b=>b.classList.remove('active'));
+  document.querySelectorAll('.tab-panel').forEach(p=>p.classList.remove('active'));
+  btn.classList.add('active');
+  document.getElementById('tab-'+name).classList.add('active');
+}
+
+/* ── COPY & SPEECH ── */
+function copyOutput() {
+  navigator.clipboard.writeText(document.getElementById('outputText').textContent).then(()=>{
+    const b=document.getElementById('copyBtn'); b.textContent='✓ Copied';
+    setTimeout(()=>b.textContent='⎘ Copy',2000);
+  });
+}
+function speakOutput() {
+  if(isSpeaking){stopSpeech();return;}
+  const text=document.getElementById('outputText').textContent.trim();
+  if(!text||text==='Translation will appear here...')return;
+  const u=new SpeechSynthesisUtterance(text); u.rate=0.85;
+  u.onend=()=>{ isSpeaking=false; document.getElementById('speakBtn').textContent='▶ Listen'; document.getElementById('speakBtn').classList.remove('speaking'); };
+  isSpeaking=true; document.getElementById('speakBtn').textContent='◼ Stop'; document.getElementById('speakBtn').classList.add('speaking');
+  speechSynthesis.speak(u);
+}
+function stopSpeech() {
+  speechSynthesis.cancel(); isSpeaking=false;
+  const b=document.getElementById('speakBtn'); if(b){b.textContent='▶ Listen';b.classList.remove('speaking');}
+  const p=document.getElementById('pronunListenBtn'); if(p){p.textContent='▶ Listen';p.classList.remove('speaking');}
+}
+
+let pronunSpeaking=false;
+function speakPronun() {
+  if(pronunSpeaking){speechSynthesis.cancel();pronunSpeaking=false;document.getElementById('pronunListenBtn').textContent='▶ Listen';document.getElementById('pronunListenBtn').classList.remove('speaking');return;}
+  // speak the translation text (TTS approximation of pronunciation)
+  const text=document.getElementById('outputText').textContent.trim();
+  if(!text||text==='Translation will appear here...')return;
+  const u=new SpeechSynthesisUtterance(text); u.rate=0.75;
+  u.onend=()=>{pronunSpeaking=false;const b=document.getElementById('pronunListenBtn');if(b){b.textContent='▶ Listen';b.classList.remove('speaking');}};
+  pronunSpeaking=true;
+  document.getElementById('pronunListenBtn').textContent='◼ Stop';
+  document.getElementById('pronunListenBtn').classList.add('speaking');
+  speechSynthesis.speak(u);
+}
+
+/* ── SCRIPT KEYBOARD ── */
+const SCRIPTS = {
+  greek: {
+    sections: [
+      { title:'Lowercase', keys:['α','β','γ','δ','ε','ζ','η','θ','ι','κ','λ','μ','ν','ξ','ο','π','ρ','σ','ς','τ','υ','φ','χ','ψ','ω'] },
+      { title:'Uppercase', keys:['Α','Β','Γ','Δ','Ε','Ζ','Η','Θ','Ι','Κ','Λ','Μ','Ν','Ξ','Ο','Π','Ρ','Σ','Τ','Υ','Φ','Χ','Ψ','Ω'] },
+      { title:'Diacritics', keys:['ά','έ','ή','ί','ό','ύ','ώ','ϊ','ϋ','ΐ','ΰ','ἀ','ἁ','ἂ','ἃ','ἄ','ἅ'] }
+    ]
+  },
+  hebrew: {
+    sections: [
+      { title:'Consonants', keys:['א','ב','ג','ד','ה','ו','ז','ח','ט','י','כ','ך','ל','מ','ם','נ','ן','ס','ע','פ','ף','צ','ץ','ק','ר','ש','ת'] },
+      { title:'Vowels (Niqqud)', keys:['ָ','ַ','ֲ','ֵ','ֶ','ֱ','ִ','ֳ','ֹ','ֻ','ְ'] }
+    ]
+  },
+  arabic: {
+    sections: [
+      { title:'Letters', keys:['ا','ب','ت','ث','ج','ح','خ','د','ذ','ر','ز','س','ش','ص','ض','ط','ظ','ع','غ','ف','ق','ك','ل','م','ن','ه','و','ي','ء','ى'] },
+      { title:'Diacritics', keys:['َ','ُ','ِ','ً','ٌ','ٍ','ْ','ّ'] }
+    ]
+  },
+  devanagari: {
+    sections: [
+      { title:'Vowels', keys:['अ','आ','इ','ई','उ','ऊ','ए','ऐ','ओ','औ','अं','अः'] },
+      { title:'Consonants', keys:['क','ख','ग','घ','ङ','च','छ','ज','झ','ञ','ट','ठ','ड','ढ','ण','त','थ','द','ध','न','प','फ','ब','भ','म','य','र','ल','व','श','ष','स','ह'] },
+      { title:'Matras', keys:['ा','ि','ी','ु','ू','े','ै','ो','ौ','ं','ः','्'] }
+    ]
+  },
+  coptic: {
+    sections: [
+      { title:'Letters', keys:['ⲁ','ⲃ','ⲅ','ⲇ','ⲉ','ⲋ','ⲍ','ⲏ','ⲑ','ⲓ','ⲕ','ⲗ','ⲙ','ⲛ','ⲝ','ⲟ','ⲡ','ⲣ','ⲥ','ⲧ','ⲩ','ⲫ','ⲭ','ⲯ','ⲱ'] },
+      { title:'Coptic-specific', keys:['ϣ','ϥ','ϧ','ϩ','ϫ','ϭ','ϯ'] }
+    ]
+  },
+  tifinagh: {
+    sections: [
+      { title:'Tifinagh', keys:['ⴰ','ⴱ','ⴳ','ⴷ','ⴻ','ⴼ','ⴽ','ⵀ','ⵃ','ⵄ','ⵅ','ⵇ','ⵉ','ⵊ','ⵍ','ⵎ','ⵏ','ⵓ','ⵔ','ⵕ','ⵖ','ⵙ','ⵚ','ⵛ','ⵜ','ⵡ','ⵢ','ⵣ','ⵥ','ⵯ'] }
+    ]
+  },
+  geez: {
+    sections: [
+      { title:'Ge\'ez', keys:['ሀ','ሁ','ሂ','ሃ','ሄ','ህ','ሆ','ለ','ሉ','ሊ','ላ','ሌ','ል','ሎ','ሐ','ሑ','ሒ','ሓ','ሔ','ሕ','ሖ','መ','ሙ','ሚ','ማ','ሜ','ም','ሞ','ሠ','ሡ','ሢ','ሣ','ሤ','ሥ','ሦ','ረ','ሩ','ሪ','ራ','ሬ','ር','ሮ','ሰ','ሱ','ሲ','ሳ','ሴ','ስ','ሶ','ቀ','ቁ','ቂ','ቃ','ቄ','ቅ','ቆ'] }
+    ]
+  },
+  runic: {
+    sections: [
+      { title:'Elder Futhark', keys:['ᚠ','ᚢ','ᚦ','ᚨ','ᚱ','ᚲ','ᚷ','ᚹ','ᚺ','ᚾ','ᛁ','ᛃ','ᛇ','ᛈ','ᛉ','ᛊ','ᛏ','ᛒ','ᛖ','ᛗ','ᛚ','ᛜ','ᛞ','ᛟ'] },
+      { title:'Younger Futhark', keys:['ᚠ','ᚢ','ᚦ','ᚬ','ᚱ','ᚴ','ᚼ','ᚾ','ᛁ','ᛅ','ᛋ','ᛏ','ᛒ','ᛘ','ᛚ','ᛦ'] }
+    ]
+  },
+  armenian: {
+    sections: [
+      { title:'Uppercase', keys:['Ա','Բ','Գ','Դ','Ե','Զ','Է','Ը','Թ','Ժ','Ի','Լ','Խ','Ծ','Կ','Հ','Ձ','Ղ','Ճ','Մ','Յ','Ն','Շ','Ո','Չ','Պ','Ջ','Ռ','Ս','Վ','Տ','Ր','Ց','Ւ','Փ','Ք'] },
+      { title:'Lowercase', keys:['ա','բ','գ','դ','ե','զ','է','ը','թ','ժ','ի','լ','խ','ծ','կ','հ','ձ','ղ','ճ','մ','յ','ն','շ','ո','չ','պ','ջ','ռ','ս','վ','տ','ր','ց','ւ','փ','ք'] }
+    ]
+  }
+};
+
+function toggleKbd() {
+  const panel=document.getElementById('kbdPanel'), btn=document.getElementById('kbdToggleBtn');
+  const open=panel.classList.toggle('open');
+  btn.classList.toggle('active',open);
+  if(open) renderKbd();
+}
+
+function renderKbd() {
+  const script=document.getElementById('kbdScript').value;
+  const data=SCRIPTS[script]; if(!data) return;
+  const container=document.getElementById('kbdKeys');
+  container.innerHTML='';
+  data.sections.forEach(sec=>{
+    const secDiv=document.createElement('div'); secDiv.className='kbd-section';
+    const title=document.createElement('div'); title.className='kbd-section-title'; title.textContent=sec.title;
+    secDiv.appendChild(title);
+    const row=document.createElement('div'); row.className='kbd-row';
+    sec.keys.forEach(k=>{
+      const btn=document.createElement('button'); btn.className='kbd-key'; btn.textContent=k;
+      btn.onclick=()=>insertChar(k); row.appendChild(btn);
+    });
+    secDiv.appendChild(row); container.appendChild(secDiv);
+  });
+}
+
+function insertChar(ch) {
+  const ta=document.getElementById('inputText');
+  const s=ta.selectionStart, e=ta.selectionEnd;
+  ta.value=ta.value.substring(0,s)+ch+ta.value.substring(e);
+  ta.selectionStart=ta.selectionEnd=s+ch.length;
+  ta.focus(); updateCount();
+}
+
+function updateKeyboard() {
+  const lang=document.getElementById('srcLang').value.toLowerCase();
+  const sel=document.getElementById('kbdScript');
+  if(lang.includes('greek')) sel.value='greek';
+  else if(lang.includes('hebrew')) sel.value='hebrew';
+  else if(lang.includes('arabic')) sel.value='arabic';
+  else if(lang.includes('sanskrit')||lang.includes('devanagari')) sel.value='devanagari';
+  else if(lang.includes('coptic')) sel.value='coptic';
+  else if(lang.includes('berber')||lang.includes('tamazight')||lang.includes('tachel')||lang.includes('tarifit')||lang.includes('kabyle')||lang.includes('tifinagh')) sel.value='tifinagh';
+  else if(lang.includes('norse')||lang.includes('runic')) sel.value='runic';
+  else if(lang.includes('ge\'ez')||lang.includes('ethiopic')) sel.value='geez';
+  if(document.getElementById('kbdPanel').classList.contains('open')) renderKbd();
+}
+
+/* ── TRANSLATE ── */
+async function doTranslate() {
+  const input=document.getElementById('inputText').value.trim(); if(!input) return;
+  const src=document.getElementById('srcLang').value, tgt=document.getElementById('tgtLang').value;
+  const btn=document.getElementById('translateBtn'), out=document.getElementById('outputText');
+  const errMsg=document.getElementById('errMsg');
+
+  btn.disabled=true; btn.textContent='TRANSLATING...';
+  out.textContent=''; out.className='output-content loading';
+  document.getElementById('outputActions').classList.remove('show');
+  document.getElementById('resultTabs').classList.remove('visible');
+  errMsg.style.display='none'; stopSpeech();
+
+  const system=`You are an expert linguist and ancient language scholar. Translate text and return ONLY valid JSON, no markdown fences, no extra text.
+
+Rules:
+- Translate faithfully. For ancient languages provide native script + labeled romanized transliteration.
+- ipa_full: IPA transcription of the ENTIRE translated text as a string (use standard IPA symbols)
+- ipa_note: 1-2 sentences about pronunciation features or phonology of the target language
+- ipa_words: per-word array of {word, ipa} for the translated text (up to 10 words)
+- breakdown: word-by-word of translated text, each: {word, transliteration (romanized if non-Latin, else ""), meaning (English gloss, max 4 words)}
+- notes: 2-3 scholarly sentences on etymology, cultural context, or translation choices
+
+Return ONLY:
+{"translation":"...","notes":"...","ipa_full":"...","ipa_note":"...","ipa_words":[{"word":"...","ipa":"..."}],"breakdown":[{"word":"...","transliteration":"...","meaning":"..."}]}`;
+
+  try {
+    const resp=await fetch(API,{method:'POST',headers:{'Content-Type':'application/json','anthropic-version':'2023-06-01','anthropic-dangerous-direct-browser-access':'true'},body:JSON.stringify({model:'claude-sonnet-4-20250514',max_tokens:2000,system,messages:[{role:'user',content:'Translate from '+src+' to '+tgt+':\n\n"'+input+'"'}]})});
+    if(!resp.ok) throw new Error('API '+resp.status);
+    const data=await resp.json();
+    const raw=(data.content||[]).find(b=>b.type==='text')?.text||'';
+    let parsed;
+    try { parsed=JSON.parse(raw.replace(/```json|```/g,'').trim()); }
+    catch { parsed={translation:raw.trim(),notes:'',ipa_full:'',ipa_note:'',ipa_words:[],breakdown:[]}; }
+
+    out.className='output-content';
+    out.textContent=(parsed.translation||'').trim();
+    document.getElementById('outputActions').classList.add('show');
+
+    // breakdown tab
+    const grid=document.getElementById('breakdownGrid'); grid.innerHTML='';
+    (parsed.breakdown||[]).forEach(w=>{
+      const d=document.createElement('div'); d.className='breakdown-word';
+      d.innerHTML='<span class="bw-original">'+(w.word||'')+'</span>'+(w.transliteration?'<span class="bw-roman">'+w.transliteration+'</span>':'')+'<span class="bw-meaning">'+(w.meaning||'')+'</span>';
+      grid.appendChild(d);
+    });
+
+    // IPA tab
+    document.getElementById('ipaMain').textContent=parsed.ipa_full||'';
+    document.getElementById('ipaNote').textContent=parsed.ipa_note||'';
+    const ipaWords=document.getElementById('ipaWords'); ipaWords.innerHTML='';
+    (parsed.ipa_words||[]).forEach(w=>{
+      const d=document.createElement('div'); d.className='ipa-word';
+      d.innerHTML='<div class="ipa-w-orig">'+(w.word||'')+'</div><div class="ipa-w-ipa">'+(w.ipa||'')+'</div>';
+      ipaWords.appendChild(d);
+    });
+
+    // notes tab
+    document.getElementById('notesText').textContent=parsed.notes||'';
+
+    document.getElementById('resultTabs').classList.add('visible');
+
+    // pronunciation bar
+    document.getElementById('pronunFull').textContent = parsed.ipa_full ? '/​' + parsed.ipa_full + '/' : '';
+    document.getElementById('pronunNote').textContent = parsed.ipa_note || '';
+    const pw = document.getElementById('pronunWords'); pw.innerHTML='';
+    (parsed.ipa_words||[]).forEach(w=>{
+      const d=document.createElement('div'); d.className='pronun-word-pill';
+      d.innerHTML='<div class="pronun-word-orig">'+(w.word||'')+'</div><div class="pronun-word-ipa">'+(w.ipa||'')+'</div>';
+      pw.appendChild(d);
+    });
+    if(parsed.ipa_full||parsed.ipa_note||(parsed.ipa_words&&parsed.ipa_words.length)){
+      document.getElementById('pronunBar').classList.add('visible');
+    }
+  } catch(e) {
+    resetOutput(); errMsg.style.display='block';
+    errMsg.textContent='Translation failed. Please check your connection and try again.';
+  }
+  btn.disabled=false; btn.textContent='TRANSLATE';
+}
+
+/* ── DICTIONARY LOOKUP ── */
+async function doLookup() {
+  const word=document.getElementById('dictWord').value.trim(); if(!word) return;
+  const lang=document.getElementById('dictLang').value;
+  const btn=document.getElementById('dictBtn');
+  const loading=document.getElementById('dictLoading');
+  const result=document.getElementById('dictResult');
+
+  btn.disabled=true; loading.style.display='block'; result.classList.remove('visible');
+
+  const system=`You are an expert ancient language lexicographer. Return ONLY valid JSON, no markdown, no extra text.
+  
+For the given word in the given language provide a full dictionary entry. Return:
+{"word":"the word as given","ipa":"IPA pronunciation","pos":"part of speech (noun/verb/adj etc)","definition":"full definition in English, 1-3 sentences","etymology":"etymology and historical notes, 2-3 sentences","examples":["example usage or phrase 1","example usage or phrase 2","example usage or phrase 3"]}`;
+
+  try {
+    const resp=await fetch(API,{method:'POST',headers:{'Content-Type':'application/json','anthropic-version':'2023-06-01','anthropic-dangerous-direct-browser-access':'true'},body:JSON.stringify({model:'claude-sonnet-4-20250514',max_tokens:800,system,messages:[{role:'user',content:'Dictionary entry for the word "'+word+'" in '+lang}]})});
+    if(!resp.ok) throw new Error('API '+resp.status);
+    const data=await resp.json();
+    const raw=(data.content||[]).find(b=>b.type==='text')?.text||'';
+    let p;
+    try { p=JSON.parse(raw.replace(/```json|```/g,'').trim()); }
+    catch { p={word,ipa:'',pos:'',definition:raw.trim(),etymology:'',examples:[]}; }
+
+    document.getElementById('dictWordTitle').textContent=p.word||word;
+    document.getElementById('dictIpa').textContent=p.ipa?'/'+p.ipa+'/':'';
+    document.getElementById('dictPos').textContent=p.pos||'';
+    document.getElementById('dictDef').textContent=p.definition||'';
+    document.getElementById('dictEtym').textContent=p.etymology||'';
+    const ul=document.getElementById('dictExamples'); ul.innerHTML='';
+    (p.examples||[]).forEach(ex=>{ const li=document.createElement('li'); li.textContent=ex; ul.appendChild(li); });
+    result.classList.add('visible');
+  } catch(e) {
+    document.getElementById('dictWordTitle').textContent='Lookup failed';
+    document.getElementById('dictDef').textContent='Please check your connection and try again.';
+    document.getElementById('dictIpa').textContent=''; document.getElementById('dictPos').textContent='';
+    document.getElementById('dictEtym').textContent=''; document.getElementById('dictExamples').innerHTML='';
+    result.classList.add('visible');
+  }
+  btn.disabled=false; loading.style.display='none';
+}
+document.getElementById('dictWord').addEventListener('keydown',e=>{ if(e.key==='Enter') doLookup(); });
+
+/* ── WORLD MAP ── */
+const LANG_REGIONS = {
+  'English':                    { label:'British Isles & Anglophone world', primary:['GBR','USA','AUS','CAN','NZL','IRL'], secondary:['ZAF','IND','NGA','KEN'] },
+  'Latin':                      { label:'Roman Empire (Italy & Mediterranean)', primary:['ITA'], secondary:['ESP','FRA','PRT','ROU','GRC','TUN','LBY','EGY','TUR','SYR','LBN','ISR','JOR','IRQ','GBR'] },
+  'Ancient Greek':              { label:'Ancient Greece & Aegean', primary:['GRC','CYP'], secondary:['TUR','MKD','ALB','BGR','ITA','SYR','EGY'] },
+  'Assyrian (Akkadian) — General': { label:'Mesopotamia (modern Iraq & Syria)', primary:['IRQ','SYR'], secondary:['TUR','IRN','LBN','JOR','KWT'] },
+  'Old Assyrian (2000–1500 BCE)':  { label:'Northern Mesopotamia', primary:['IRQ','SYR','TUR'], secondary:['IRN'] },
+  'Middle Assyrian (1500–1000 BCE)':{ label:'Assyrian heartland', primary:['IRQ','SYR'], secondary:['TUR','IRN'] },
+  'Neo-Assyrian (1000–600 BCE)':   { label:'Neo-Assyrian Empire', primary:['IRQ','SYR','TUR'], secondary:['IRN','LBN','ISR','JOR','EGY'] },
+  'Old Babylonian Akkadian':    { label:'Babylonia (southern Iraq)', primary:['IRQ'], secondary:['SYR','IRN','KWT'] },
+  'Neo-Babylonian Akkadian':    { label:'Neo-Babylonian Empire', primary:['IRQ','SYR'], secondary:['IRN','TUR','LBN','ISR','EGY'] },
+  'Sumerian':                   { label:'Southern Mesopotamia (Iraq)', primary:['IRQ'], secondary:['SYR','KWT'] },
+  'Old Egyptian':               { label:'Ancient Egypt', primary:['EGY'], secondary:['SDN','LBY','ISR','JOR'] },
+  'Sanskrit':                   { label:'Indian Subcontinent', primary:['IND','NPL'], secondary:['PAK','BGD','LKA','MMR','THA','IDN'] },
+  'Old Norse':                  { label:'Scandinavia & Norse lands', primary:['NOR','SWE','DNK','ISL'], secondary:['FIN','GBR','IRL','FRO','GRL','RUS'] },
+  'Aramaic':                    { label:'Levant & Mesopotamia', primary:['SYR','IRQ','LBN'], secondary:['ISR','JOR','TUR','IRN','EGY'] },
+  'Suret (Assyrian Neo-Aramaic)':{ label:'Northern Iraq, Syria & diaspora', primary:['IRQ','SYR'], secondary:['TUR','IRN','SWE','USA','AUS'] },
+  'Ancient Hebrew':             { label:'Canaan (Israel & Palestine)', primary:['ISR','PSE'], secondary:['JOR','LBN','SYR'] },
+  'Old Persian':                { label:'Achaemenid Persian Empire (Iran)', primary:['IRN'], secondary:['IRQ','AFG','TUR','PAK','EGY','GRC','UZB'] },
+  'Coptic':                     { label:'Egypt (Nile Valley)', primary:['EGY'], secondary:['SDN','LBY'] },
+  'Phoenician':                 { label:'Phoenicia (Lebanon & coastal Levant)', primary:['LBN','SYR'], secondary:['ISR','TUN','MLT','CYP','ESP','LBY','MAR','DZA'] },
+  'Tamazight (Central Atlas Berber)':{ label:'Central Morocco', primary:['MAR'], secondary:['DZA'] },
+  'Tachelhit (Shilha) — SW Morocco':{ label:'Southern Morocco', primary:['MAR'], secondary:['ESH'] },
+  'Tarifit (Rif Berber) — N Morocco':{ label:'Northern Morocco', primary:['MAR'], secondary:['DZA'] },
+  'Kabyle — Algeria':           { label:'Kabylie, Algeria', primary:['DZA'], secondary:['MAR','TUN'] },
+  'Tachawit (Chaouia) — Algeria':{ label:'Aurès Mountains, Algeria', primary:['DZA'], secondary:['TUN'] },
+  'Tumzabt (Mozabite) — Algeria':{ label:'Mʼzab Valley, Algeria', primary:['DZA'], secondary:[] },
+  'Tamahaq (Tuareg) — Sahara':  { label:'Central Sahara (Algeria & Libya)', primary:['DZA','LBY'], secondary:['NER','MLI','TCD'] },
+  'Tamasheq (Tuareg) — Mali/Niger':{ label:'Mali & Niger', primary:['MLI','NER'], secondary:['BFA','DZA','LBY'] },
+  'Tamajaq (Tuareg) — Niger':   { label:'Niger', primary:['NER'], secondary:['MLI','DZA'] },
+  'Nafusi — Libya':             { label:'Nafusa Mountains, Libya', primary:['LBY'], secondary:['TUN'] },
+  'Siwi — Egypt':               { label:'Siwa Oasis, Egypt', primary:['EGY'], secondary:[] },
+  'Ghadamès — Libya':           { label:'Ghadamès, Libya', primary:['LBY'], secondary:['TUN','DZA'] },
+  'Zenaga — Mauritania':        { label:'Southern Mauritania', primary:['MRT'], secondary:['SEN','MLI'] },
+  'Old English (Anglo-Saxon)':  { label:'Britain (England & Lowland Scotland)', primary:['GBR'], secondary:['IRL'] },
+  'Classical Arabic':           { label:'Arabian Peninsula & Arab world', primary:['SAU','YEM'], secondary:['EGY','IRQ','SYR','JOR','LBN','LBY','TUN','DZA','MAR','SDN','OMN','ARE','KWT','QAT','BHR','MRT','SOM'] },
+  'Hittite':                    { label:'Anatolia (modern Turkey)', primary:['TUR'], secondary:['SYR','LBN','IRQ'] },
+  'Elamite':                    { label:'Elam (southwestern Iran)', primary:['IRN'], secondary:['IRQ'] },
+  'Ugaritic':                   { label:'Ugarit (coastal Syria)', primary:['SYR'], secondary:['LBN','CYP'] },
+  'Mycenaean Greek (Linear B)': { label:'Mycenaean Greece & Aegean', primary:['GRC','CYP'], secondary:['TUR','ITA'] },
+  'Lydian':                     { label:'Lydia (western Turkey)', primary:['TUR'], secondary:[] },
+  'Etruscan':                   { label:'Etruria (central Italy)', primary:['ITA'], secondary:[] },
+  'Tocharian A':                { label:'Tarim Basin (Xinjiang, China)', primary:['CHN'], secondary:['KGZ','TJK'] },
+  'Tocharian B':                { label:'Tarim Basin (Xinjiang, China)', primary:['CHN'], secondary:['KGZ','TJK'] },
+  'Sogdian':                    { label:'Sogdia (Uzbekistan & Tajikistan)', primary:['UZB','TJK'], secondary:['AFG','KAZ','KGZ','CHN'] },
+  'Old Turkic':                 { label:'Central Asian Steppe & Mongolia', primary:['MNG','KAZ'], secondary:['CHN','UZB','TUR','RUS'] },
+  'Bactrian':                   { label:'Bactria (northern Afghanistan)', primary:['AFG'], secondary:['TJK','UZB','IRN','PAK'] },
+  'Avestan':                    { label:'Eastern Iranian lands (Persia/Bactria)', primary:['IRN','AFG'], secondary:['TJK','UZB','PAK'] },
+  'Middle Persian (Pahlavi)':   { label:'Sasanian Empire (Iran & Iraq)', primary:['IRN','IRQ'], secondary:['AFG','PAK','TUR','ARM','GEO'] },
+  "Ge'ez (Classical Ethiopic)": { label:'Ethiopian Highlands & Eritrea', primary:['ETH','ERI'], secondary:['SDN','DJI','SOM'] },
+  'Proto-Sinaitic':             { label:'Sinai Peninsula & Canaan', primary:['EGY','ISR'], secondary:['JOR','LBN','SYR'] },
+};
+
+// ISO-3166-1 alpha-3 → numeric for TopoJSON lookup
+const ISO3_TO_NUM = {"AFG":"4","ALB":"8","DZA":"12","AND":"20","AGO":"24","ARG":"32","ARM":"51","AUS":"36","AUT":"40","AZE":"31","BHS":"44","BHR":"48","BGD":"50","BLR":"112","BEL":"56","BLZ":"84","BEN":"204","BTN":"64","BOL":"68","BIH":"70","BWA":"72","BRA":"76","BRN":"96","BGR":"100","BFA":"854","BDI":"108","CPV":"132","KHM":"116","CMR":"120","CAN":"124","CAF":"140","TCD":"148","CHL":"152","CHN":"156","COL":"170","COM":"174","COD":"180","COG":"178","CRI":"188","HRV":"191","CUB":"192","CYP":"196","CZE":"203","DNK":"208","DJI":"262","DOM":"214","ECU":"218","EGY":"818","SLV":"222","ERI":"232","EST":"233","SWZ":"748","ETH":"231","FJI":"242","FIN":"246","FRA":"250","GAB":"266","GMB":"270","GEO":"268","DEU":"276","GHA":"288","GRC":"300","GTM":"320","GIN":"324","GNB":"624","GUY":"328","HTI":"332","HND":"340","HUN":"348","ISL":"352","IND":"356","IDN":"360","IRN":"364","IRQ":"368","IRL":"372","ISR":"376","ITA":"380","JAM":"388","JPN":"392","JOR":"400","KAZ":"398","KEN":"404","PRK":"408","KOR":"410","KWT":"414","KGZ":"417","LAO":"418","LVA":"428","LBN":"422","LSO":"426","LBR":"430","LBY":"434","LIE":"438","LTU":"440","LUX":"442","MDG":"450","MWI":"454","MYS":"458","MDV":"462","MLI":"466","MLT":"470","MRT":"478","MUS":"480","MEX":"484","MDA":"498","MCO":"492","MNG":"496","MNE":"499","MAR":"504","MOZ":"508","MMR":"104","NAM":"516","NPL":"524","NLD":"528","NZL":"554","NIC":"558","NER":"562","NGA":"566","MKD":"807","NOR":"578","OMN":"512","PAK":"586","PAN":"591","PNG":"598","PRY":"600","PER":"604","PHL":"608","POL":"616","PRT":"620","QAT":"634","ROU":"642","RUS":"643","RWA":"646","SAU":"682","SEN":"686","SRB":"688","SLE":"694","SVK":"703","SVN":"705","SOM":"706","ZAF":"710","ESP":"724","LKA":"144","SDN":"729","SUR":"740","SWE":"752","CHE":"756","SYR":"760","TWN":"158","TJK":"762","TZA":"834","THA":"764","TLS":"626","TGO":"768","TTO":"780","TUN":"788","TUR":"792","TKM":"795","UGA":"800","UKR":"804","ARE":"784","GBR":"826","USA":"840","URY":"858","UZB":"860","VEN":"862","VNM":"704","YEM":"887","ZMB":"894","ZWE":"716","PSE":"275","FRO":"234","GRL":"304","ESH":"732","CUW":"531","SSD":"728","XKX":"926"};
+
+let worldFeatures = null;
+
+async function loadMap() {
+  try {
+    const resp = await fetch('https://cdn.jsdelivr.net/npm/world-atlas@2/countries-110m.json');
+    const topo = await resp.json();
+    // manually unpack topojson without d3-geo
+    worldFeatures = topo;
+    drawMap([],[]);
+    updateMap();
+  } catch(e) { console.warn('Map load failed', e); }
+}
+
+function drawMap(primaryNums, secondaryNums) {
+  const svg = document.getElementById('worldMapSvg');
+  if (!worldFeatures) return;
+
+  // Use d3 if available, else skip
+  if (typeof d3 === 'undefined') return;
+
+  svg.innerHTML = '';
+  const width = 960, height = 500;
+  const projection = d3.geoNaturalEarth1().scale(153).translate([width/2, height/2]);
+  const path = d3.geoPath().projection(projection);
+
+  const countries = topojson.feature(worldFeatures, worldFeatures.objects.countries);
+
+  // graticule
+  const graticule = d3.geoGraticule()();
+  const gratPath = document.createElementNS('http://www.w3.org/2000/svg','path');
+  gratPath.setAttribute('d', path(graticule));
+  gratPath.setAttribute('fill','none');
+  gratPath.setAttribute('stroke','rgba(180,150,80,0.06)');
+  gratPath.setAttribute('stroke-width','0.5');
+  svg.appendChild(gratPath);
+
+  // sphere outline
+  const sphere = document.createElementNS('http://www.w3.org/2000/svg','path');
+  sphere.setAttribute('d', path({type:'Sphere'}));
+  sphere.setAttribute('fill','transparent');
+  sphere.setAttribute('stroke','rgba(180,150,80,0.1)');
+  sphere.setAttribute('stroke-width','0.8');
+  svg.appendChild(sphere);
+
+  countries.features.forEach(f => {
+    const id = String(f.id);
+    const el = document.createElementNS('http://www.w3.org/2000/svg','path');
+    const d = path(f);
+    if (!d) return;
+    el.setAttribute('d', d);
+    el.setAttribute('class', 'country' +
+      (primaryNums.includes(id) ? ' highlighted' : secondaryNums.includes(id) ? ' highlighted-secondary' : ''));
+    svg.appendChild(el);
+  });
+}
+
+function updateMap() {
+  const tgt = document.getElementById('tgtLang').value;
+  const src = document.getElementById('srcLang').value;
+  // prefer target language, fall back to source
+  const lang = LANG_REGIONS[tgt] ? tgt : (LANG_REGIONS[src] ? src : null);
+  const region = lang ? LANG_REGIONS[lang] : null;
+
+  const label = region ? region.label : 'Origin unknown';
+  document.getElementById('mapOriginLabel').textContent = lang ? lang + ' — ' + label : 'Select a language';
+
+  if (!worldFeatures || typeof d3 === 'undefined' || typeof topojson === 'undefined') return;
+
+  const primaryNums = region ? (region.primary || []).map(c => ISO3_TO_NUM[c]).filter(Boolean) : [];
+  const secondaryNums = region ? (region.secondary || []).map(c => ISO3_TO_NUM[c]).filter(Boolean) : [];
+  drawMap(primaryNums, secondaryNums);
+}
+
+// load d3 + topojson then world atlas
+function loadMapLibs() {
+  const s1 = document.createElement('script');
+  s1.src = 'https://cdn.jsdelivr.net/npm/d3@7/dist/d3.min.js';
+  s1.onload = () => {
+    const s2 = document.createElement('script');
+    s2.src = 'https://cdn.jsdelivr.net/npm/topojson-client@3/dist/topojson-client.min.js';
+    s2.onload = () => loadMap();
+    document.head.appendChild(s2);
+  };
+  document.head.appendChild(s1);
+}
+
+loadMapLibs();
+
+
+
+/* ── LANGUAGE SEARCH FILTER ── */
+const ALL_OPTIONS = {};
+function initLangOptions() {
+  ['srcLang','tgtLang'].forEach(id => {
+    const sel = document.getElementById(id);
+    ALL_OPTIONS[id] = Array.from(sel.options).map(o => o.value);
+  });
+}
+function filterLang(selId, query) {
+  const sel = document.getElementById(selId);
+  const current = sel.value;
+  const q = query.trim().toLowerCase();
+  sel.innerHTML = '';
+  const filtered = q ? ALL_OPTIONS[selId].filter(v => v.toLowerCase().includes(q)) : ALL_OPTIONS[selId];
+  filtered.forEach(v => {
+    const opt = document.createElement('option');
+    opt.value = v; opt.textContent = v;
+    if (v === current) opt.selected = true;
+    sel.appendChild(opt);
+  });
+  if (!filtered.includes(current) && filtered.length) sel.selectedIndex = 0;
+  updateMap();
+}
+document.addEventListener('DOMContentLoaded', initLangOptions);
+
+</script>
+</body>
+</html>
